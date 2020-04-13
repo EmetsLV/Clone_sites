@@ -102,7 +102,7 @@ void ProvFormata(char strr[]){
             }
         }    
     }
-    else strr[n] = 0; // для формата cisco
+    if (tchk == 0) strr[n] = 0; // для формата cisco
     //cout<<strr<<'\n';
 }
 void BIN(int a, int n, char str[], int k) {
