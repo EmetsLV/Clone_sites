@@ -1,8 +1,8 @@
-﻿// Project1.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include "Windows.h"
 #include <conio.h> //для использования getch()
+#include <vector>                                  
 #include <Wininet.h>
 #include <windows.h>
 #include <winsock.h>
@@ -10,10 +10,12 @@
 #include <string.h>
 #include <tchar.h>//для print_f
 #include <time.h>
+#include "HTML_code.h"
+#include "Sravnenie_HTML.h"
 
 
 #pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "Wininet.lib")
 
 using namespace std;//подключаем функции стандартных библиотек
 
@@ -24,7 +26,7 @@ void PodborSimvolov(char strr[]);//весь список возможных ва
 void ProvFormata(char strr[]);//проверка формата введённого домена и выделение нужной части
 void sdvig(char strr[], int i,int dlina);//сдвиг массива для увеличения длины домена
  char* OpenURLL(const char* url); void proverka(char prishlo[]);
-int dd = 0; int var = 0; char domen[512];//глобальгая переменная
+ int dd = 0; int var = 0; char domen[512];  string original;    int chek; char ttt[6];//глобальгая переменная
 
 
 int main(){
@@ -32,7 +34,7 @@ int main(){
     char str[40]; char varianti[512];
     while (exit) {
         if (!InternetCheckConnection(L"http://google.com", FLAG_ICC_FORCE_CONNECTION, 0)) {
-            cout << "Не подключен интернет на устройстве. Невозможно произвести проверку. Подключите интернет и повторите попытку\n";
+            cout << "Не подключен Интернет на устройстве. Невозможно произвести проверку. Подключите интернет и повторите попытку\nНажмите Enter после установления соединения с Интернет\n";
             _getch();
         }
         else {
@@ -40,7 +42,7 @@ int main(){
             cout << "\nЗдравствуйте!\nВведите домен вашего сайта:";
             cin >> str;
             russs(str);
-            ProvFormata(str);
+            //ProvFormata(str);
             PodborSimvolov(str);
             cout << "Проверка закончена";
             exit(0); break;
@@ -52,6 +54,7 @@ int main(){
 
 
 
+
 void russs(char strr[]) {
     int n = strlen(strr); int h = 0;int k;
     while (h == 0) {
@@ -60,11 +63,11 @@ void russs(char strr[]) {
             if (!((strr[j] >= 'A' && strr[j] <= 'Z') or (strr[j] >= 'a' && strr[j] <= 'z') or (strr[j] >= '0' && strr[j] <= '9') or strr[j]=='-' or strr[j] == '.')) { h = 0;break; }
             if (strr[j] == '.') { k++; }            
         }
-        if (k>2) { h = 0; }//больше двух точек
-        if (k == 2 and n >70 or k == 1 and n >66) { h == 0; } //максимальная длина (не более 63 символов в домене)
-        if (k == 2 and n <= 8 or k==1 and n<=4) { h == 0; } //минимальная длина (не менее двух символов в домене)
+        if (k>2 or k==0) { h = 0; }//больше двух точек
         ProvFormata(strr); n = strlen(strr);
-        if (strr[0] == '-' or strr[n] == '-') { h = 0; }
+        if (n > 63) { h = 0; } //максимальная длина (не более 63 символов в домене)
+        if (n < 3) { h = 0; } //минимальная длина (не менее двух символов в домене)
+        if (strr[0] == '-' or strr[n-1] == '-') { h = 0; }
         if (h==0 ) { cout << "ОШИБКА: Некорректный ввод \nВведите домен ещё раз:";cin >> strr;}
     } 
     cout<<"Формат домена верный\n";
@@ -80,7 +83,7 @@ void ProvFormata(char strr[]){
         if (dlindomen > 0) {
             for (i = 0; i <= n + 1; i++) {
                 strr[i] = strr[dlindomen + 1 + i];
-                strr[n + i] = 0;
+                strr[n+1 + i] = 0;
             }
         }
         n = strlen(strr);  int dlindomen2 = 0;
@@ -88,7 +91,8 @@ void ProvFormata(char strr[]){
         if (dlindomen2 > 0) {
             n = n - dlindomen2;
             for (i = 0; i <= n; i++) {
-                strr[dlindomen2 + i] = 0;
+                ttt[i] = strr[dlindomen2 + i];
+                strr[dlindomen2 + i] = 0;                
             }
         }
     } 
@@ -98,11 +102,12 @@ void ProvFormata(char strr[]){
         if (dlindomen2 > 0) {
             n = n - dlindomen2;
             for (i = 0; i <= n; i++) {
+                ttt[i] = strr[dlindomen2 + i];
                 strr[dlindomen2 + i] = 0;
             }
         }    
     }
-    if (tchk == 0) strr[n] = 0; // для формата cisco
+    if (tchk == 0)strr[n] = 0; // для формата cisco
     //cout<<strr<<'\n';
 }
 void BIN(int a, int n, char str[], int k) {
@@ -132,19 +137,62 @@ void BIN2(int a, int n, char str[], int k) {
     domen[tt] = 0;
 }
 void tire(char str[]) {
-    char ssss[40] ; int n = strlen(str);
+    char ssss[40]; int n = strlen(str); int cc2=1;
     for (int i=1;i<n;i++) {
         for (int j = 0;j<n+1;j++) {
-            if(j<i){ ssss[j] = str[j]; }
-            if (j==i ) { ssss[j] = '-';  ssss[j + 1] = str[j]; }
-            if (j > i) { ssss[j+1]=str[j]; }
+            if(j<i){
+                ssss[j] = str[j]; 
+            }
+            if (j==i ) { 
+                if (ssss[j-1] == '-' or str[j+1]=='-') {
+                    ssss[j] = str[j];
+                     cc2=0;
+                }
+                else {
+                    ssss[j] = '-';
+                    ssss[j + 1] = str[j];
+                }
+            }
+            if (j > i) { 
+                if (cc2 == 0) {
+                    ssss[j] = str[j];
+                }
+                else ssss[j+1]=str[j];
+            }
         }
         ssss[n+1]=0;
        // cout << ssss<< " ";
-        proverka(ssss);
+        if (cc2==1) {
+            proverka(ssss);
+        }
     }
 }
 void PodborSimvolov(char strr[]){
+    char ddomen[50];
+    int kk = strlen(strr);
+    char tt[13] = "www."; 
+    int y = strlen(tt);  int k2 = strlen(ttt);
+    for (int i = 0; i < y; i++) {
+        ddomen[i] = tt[i];
+        for (int j = 0; j < kk; j++) {
+            ddomen[y + j] = strr[j];
+            for (int g = 0; g < k2; g++) {
+                ddomen[y + kk + g] = ttt[g];
+            }
+        }
+    }
+    ddomen[y + kk + k2] = 0;
+    string a = string(ddomen);
+    wstring kal = StringToWstring(a);
+    original = SendInetRequest(P_HTTPS, kal, L"", L"");
+ 
+    for (int j = 0; j < kk; j++) {
+        ddomen[ j] = strr[j];
+    }
+    ddomen[kk ] = 0;
+    tire(ddomen);
+    proverka(ddomen);
+
     int nn=1;int k=0; cout << "\n";
     int n = strlen(strr);
     for (int i = 0; i < n; i++) { nn = nn * 2; }
@@ -174,7 +222,7 @@ void sdvig(char strr[], int i,int dlina) {
 void alfavit(char strr[], int i,int dlina){
     int  n; n = strlen(strr); 
     while (n>0) {
-        if (strr[i] == 'a') { strr[i] = '4'; break; }
+        if (strr[i] == 'a') { strr[i] = '4'; var = var + 1; break; }
         if (strr[i] == 'b') { strr[i] = '6'; var = var + 1; break; }
         if (strr[i] == 'c') { strr[i] = 'k';  var = var + 1; break;}
         if (strr[i] == 'd') { strr[i] = '0'; break; }
@@ -189,14 +237,14 @@ void alfavit(char strr[], int i,int dlina){
         if (strr[i] == 'm') { strr[i] = 'n'; sdvig(strr, i, dlina); strr[i] = 'n'; dd =1;  break; }
         if (strr[i] == 'n') { strr[i] = 'm'; break; }
         if (strr[i] == 'o') { strr[i] = '0'; break; }
-        if (strr[i] == 'p') { strr[i] = 'q'; var = var + 1; break; }
+        if (strr[i] == 'p') { strr[i] = 'r'; var = var + 1; break; }
         if (strr[i] == 'q') { strr[i] = '9'; break; }
         if (strr[i] == 'r') { strr[i] = 'e'; break; }
         if (strr[i] == 's') { strr[i] = '5'; var = var + 1; break; }
         if (strr[i] == 't') { strr[i] = '7'; var = var + 1; break; }
         if (strr[i] == 'u') { strr[i] = 'm'; break; }
         if (strr[i] == 'v') { strr[i] = 'w'; break; }
-        if (strr[i] == 'w') { strr[i] = 'v'; sdvig(strr, i, dlina); strr[i] = 'v'; dd = 1;; break; }
+        if (strr[i] == 'w') { strr[i] = 'v'; break; }
         if (strr[i] == 'x') { strr[i] = 'x'; sdvig(strr, i, dlina); strr[i] = 'e'; dd = 1;  break; }
         if (strr[i] == 'y') { strr[i] = 'j'; break; }
         if (strr[i] == 'z') { strr[i] = '2'; break; }
@@ -210,12 +258,13 @@ void alfavit(char strr[], int i,int dlina){
         if (strr[i] == '7') { strr[i] = 't'; var = var + 1; break; }
         if (strr[i] == '8') { strr[i] = 'b'; break; }
         if (strr[i] == '9') { strr[i] = 'g'; var = var + 1; break; }
+        if (strr[i] == '-') { strr[i] = 'p'; break; }
     }       
 }
 void alfavit2(char strr[], int i, int dlina){
     int  n; n = strlen(strr); 
     while (n>1) {
-        if (strr[i] == 'a') { strr[i] = '4'; break; }
+        if (strr[i] == 'a') { strr[i] = 'o'; break; }
         if (strr[i] == 'b') { strr[i] = '8'; break; }
         if (strr[i] == 'c') { strr[i] = 'x'; break; }
         if (strr[i] == 'd') { strr[i] = '0'; break; }
@@ -230,14 +279,14 @@ void alfavit2(char strr[], int i, int dlina){
         if (strr[i] == 'm') { strr[i] = 'n'; sdvig(strr, i, dlina); strr[i] = 'n'; dd = 1;  break; }
         if (strr[i] == 'n') { strr[i] = 'm'; break; }
         if (strr[i] == 'o') { strr[i] = '0'; break; }
-        if (strr[i] == 'p') { strr[i] = '9'; break; }
+        if (strr[i] == 'p') { strr[i] = 'q'; break; }
         if (strr[i] == 'q') { strr[i] = '9'; break; }
         if (strr[i] == 'r') { strr[i] = 'e'; break; }
         if (strr[i] == 's') { strr[i] = 'z'; break; }
         if (strr[i] == 't') { strr[i] = '1'; break; }
         if (strr[i] == 'u') { strr[i] = 'm'; break; }
         if (strr[i] == 'v') { strr[i] = 'w'; break; }
-        if (strr[i] == 'w') { strr[i] = 'v'; sdvig(strr, i, dlina); strr[i] = 'v'; dd = 1;; break; }
+        if (strr[i] == 'w') { strr[i] = 'v'; break; }
         if (strr[i] == 'x') { strr[i] = 'x'; sdvig(strr, i, dlina); strr[i] = 'e'; dd = 1;  break; }
         if (strr[i] == 'y') { strr[i] = 'j'; break; }
         if (strr[i] == 'z') { strr[i] = '2'; break; }
@@ -250,6 +299,7 @@ void alfavit2(char strr[], int i, int dlina){
         if (strr[i] == '6') { strr[i] = 'x'; dd = 2; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'i'; sdvig(strr, i, dlina); strr[i] = 's'; break; }
         if (strr[i] == '7') { strr[i] = 'n'; dd = 4; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'e'; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'v'; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'e'; sdvig(strr, i, dlina); strr[i] = 's'; break; }
         if (strr[i] == '9') { strr[i] = 'e'; dd = 3; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'n'; sdvig(strr, i, dlina); dlina = dlina + 1; strr[i] = 'i'; sdvig(strr, i, dlina); strr[i] = 'n'; break; }
+        if (strr[i] == '-') { strr[i] = 'p'; break; }
     }
 }
 char* OpenURLL(const char* url) {
@@ -257,7 +307,7 @@ char* OpenURLL(const char* url) {
     fd_set fds;   struct timeval	tv;  int ret;//для таймаута
     // Проверим на правильность введенный адрес. // Он должен начинаться с "http://"
     if (memcmp(url, "HTTP://", 7) != 0 && memcmp(url, "http://", 7) != 0) return(NULL);
-    url += 7;
+    if (memcmp(url, "HTTP://", 7) == 0 or memcmp(url, "http://", 7) == 0) url += 7;
     //обрезаю ссылку для красивого вывода 
     int n=strlen(url);
     for (int i = 0; i < n-1; i++) { urrll[i] = url[i]; }
@@ -294,16 +344,14 @@ char* OpenURLL(const char* url) {
     // Поучаем IP адрес по имени хоста
     struct hostent* hp;
     if (!(hp = gethostbyname(http_host))) {
-        free(http_host);
-        free(http_path);
+        free(http_host);  free(http_path);
         return(NULL);
     }
 
     // Открываем сокет
     s = socket(AF_INET, SOCK_STREAM, 0);
     if (s == INVALID_SOCKET) {
-        free(http_host);
-        free(http_path);
+        free(http_host);  free(http_path);
         return(NULL);
     }
 
@@ -321,9 +369,8 @@ char* OpenURLL(const char* url) {
 
     // Соединяемся с хостом
     if (connect(s, (sockaddr*)&ssin, sizeof(ssin))==0) {
-        printf("Ok\n");
-    }
-    
+        chek = 1; printf("Ok");
+    }    
     /* Ожидание соединения */
     tv.tv_sec = 5;
     tv.tv_usec = 0;
@@ -331,11 +378,8 @@ char* OpenURLL(const char* url) {
     FD_SET(s, &fds);
     ret = select(s + 1, NULL, &fds, NULL, &tv);
     if (!ret)
-        printf("Время ожидания подключения истекло\n");
-
-
-    // Деинициализация библиотеки Ws2_32.dll
-    WSACleanup();
+        printf("Время ожидания подключения истекло\n"); 
+    closesocket(s);
     //  return(result);
 }
 void proverka(char prishlo[]) {
@@ -354,7 +398,23 @@ void proverka(char prishlo[]) {
     }
     ddomen[k + kk + k2] = 0;
     const char* t = ddomen;
+    chek = 0;
     char* result = OpenURLL(t);
+        
+    
+    if (chek == 1) {
+        t += 11;
+        string a = string(t);
+        a[a.size() - 1]=0;
+        wstring kal = StringToWstring(a);
+        string answer = SendInetRequest(P_HTTPS, kal, L"", L"");
+        //answer = SendInetRequest(P_HTTPS, kal, L"", L"");
+        float prosent = 0;
+        prosent = similar_text(original, answer, prosent);
+        if (prosent >= 70.0) {
+            printf("Сайт %c является клоном\n", t);
+        }
+    }
     //////////////
     char ddomen2[50];
     char tt3[6] = ".com/"; int k3 = strlen(tt3);
@@ -369,10 +429,18 @@ void proverka(char prishlo[]) {
     }
     ddomen2[k + kk + k3] = 0;
     const char* h = ddomen2;
+    chek = 0;
     char* result2 = OpenURLL(h);
+    if (chek == 1) {
+        h += 11;
+        string a2 = string(h);
+        a2[a2.size() - 1] = 0;
+        wstring kal2 = StringToWstring(a2);
+        string answer2 = SendInetRequest(P_HTTPS, kal2, L"", L"");
+        //answer = SendInetRequest(P_HTTPS, kal, L"", L"");
+        float prosent = 0;
+        prosent = similar_text(original, answer2, prosent);
+
+    }
 
 }
-
-
-
-
